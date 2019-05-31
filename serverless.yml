@@ -40,7 +40,7 @@ resources:
 custom:
   s3:
     host: s3
-    port: 7000
+    port: 7001
     directory: /tmp
   serverless-offline:
     port: 3011

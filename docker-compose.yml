@@ -16,5 +16,5 @@ services:
       - ./s3-conf.json:/usr/src/app/config.json
       - ./s3-location-conf.json:/usr/src/app/locationConfig.json
     ports:
-    - "7000:7000" # s3 server
+    - "7001:7000" # s3 server
     - "9991:9991" # data store
