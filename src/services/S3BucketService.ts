@@ -32,7 +32,6 @@ class S3BucketService {
      * @param metadata - optional metadata
      */
     public upload(bucketName: string, fileName: string, content: Buffer|Uint8Array|Blob|string|Readable, metadata?: Metadata): Promise<ManagedUpload.SendData> {
-        console.log("upload bucket name ->>", bucketName)
         return this.s3Client.upload({
             Bucket: bucketName,
             Key: `${process.env.BRANCH}/${fileName}`,
@@ -47,7 +46,6 @@ class S3BucketService {
      * @param fileName - the name of the file
      */
         public download(bucketName: string, fileName: string): Promise<PromiseResult<S3.Types.GetObjectOutput, AWSError>> {
-            console.log(bucketName)
             return this.s3Client.getObject({
                 Bucket: bucketName,
                 Key: `${process.env.BRANCH}/${fileName}`,
