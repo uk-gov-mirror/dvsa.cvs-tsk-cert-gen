@@ -41,7 +41,7 @@ class S3BucketMockService {
             throw error;
         }
         const response: ManagedUpload.SendData = {
-            Location: `http://localhost:7000/${bucketName}/${fileName}`,
+            Location: `http://localhost:7001/${bucketName}/${fileName}`,
             ETag: "621c9c14d75958d4c3ed8ad77c80cde1",
             Bucket: bucketName,
             Key: `${process.env.BRANCH}/${fileName}`

@@ -20,7 +20,7 @@ invoke:
           name: technical-records-${BRANCH}
 s3:
   local:
-    endpoint: http://localhost:7000
+    endpoint: http://localhost:7001
     s3ForcePathStyle: true
   remote: {}
 mot:

@@ -31,7 +31,7 @@ resources:
     CertBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: cvs-cert
+        BucketName: cvs-cert-dev
     SignatureBucket:
       Type: AWS::S3::Bucket
       Properties:

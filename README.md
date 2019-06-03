@@ -53,7 +53,7 @@ The S3 configuration contains settings for both the `local` and the `remote` env
 ```
 s3:
   local:
-    endpoint: http://localhost:7000
+    endpoint: http://localhost:7001
     s3ForcePathStyle: true
   remote: {}
 ```
