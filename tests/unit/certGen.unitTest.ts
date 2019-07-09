@@ -70,7 +70,7 @@ describe("cert-gen", () => {
 
                         return certificateGenerationService.generatePayload(testResult)
                         .then((payload: any) => {
-                            expect(payload).to.eql(expectedResult);
+                            expect(payload).to.deep.equal(expectedResult);
                         });
                     });
                 });
@@ -109,7 +109,7 @@ describe("cert-gen", () => {
 
                         return certificateGenerationService.generatePayload(testResult)
                         .then((payload: any) => {
-                            expect(payload).to.eql(expectedResult);
+                            expect(payload).to.deep.equal(expectedResult);
 
                             // Populate mock function definitions
                             LambdaMockService.populateFunctions();
@@ -186,9 +186,9 @@ describe("cert-gen", () => {
                 it("successfully generate a certificate", () => {
                     return certificateGenerationService.generateCertificate(testResult)
                     .then((response: any) => {
-                        expect(response.fileName).to.equal("1_XMGDE02FS0H012345_1.pdf");
-                        expect(response.certificateType).to.equal("VTP20");
-                        expect(response.certificateOrder).to.eql({ current: 1, total: 2 });
+                        expect(response.fileName).to.deep.equal("1_XMGDE02FS0H012345_1.pdf");
+                        expect(response.certificateType).to.deep.equal("VTP20");
+                        expect(response.certificateOrder).to.deep.equal({ current: 1, total: 2 });
                     })
                     .catch((error: any) => {
                         expect.fail(error);
