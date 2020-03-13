@@ -20,7 +20,6 @@ class CertificateUploadService {
      * @param payload
      */
     public uploadCertificate(payload: IGeneratedCertificateResponse): Promise<ManagedUpload.SendData> {
-        console.log("BEFORE UPLOADING CERTIFICATE", payload.shouldEmailCertificate);
         const metadata: Metadata = {
             "vrm": payload.vrm,
             "test-type-name": payload.testTypeName,

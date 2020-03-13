@@ -80,7 +80,6 @@ class CertificateGenerationService {
                 const payload: any = this.lambdaClient.validateInvocationResponse(response);
                 const resBody: string = payload.body;
                 const responseBuffer: Buffer = Buffer.from(resBody, "base64");
-                console.log("SHOULD EMAIL CERTIFICATE", testResult.shouldEmailCertificate);
                 return {
                     vrm: testResult.vehicleType === VEHICLE_TYPES.TRL ? testResult.trailerId : testResult.vrm,
                     testTypeName: testResult.testTypes.testTypeName,
