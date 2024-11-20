@@ -183,6 +183,10 @@ interface ITestResult {
 	testTypes: ITestType;
 	createdById?: string;
 	systemNumber: string;
+	recalls: {
+		manufacturer: string;
+		hasRecall: boolean;
+	};
 }
 
 // TODO: move to types definition interface after CB2-12580
@@ -217,10 +221,6 @@ interface ITestType {
 	defects: DefectDetailsSchema[];
 	requiredStandards?: IRequiredStandard[];
 	customDefects?: ICustomDefect[];
-	recalls: {
-		manufacturer: string;
-		hasRecall: boolean;
-	};
 }
 
 // TODO: move to types definition interface after CB2-12580
