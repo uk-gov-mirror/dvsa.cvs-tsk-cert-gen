@@ -1,7 +1,6 @@
 import moment from 'moment';
 import { Service } from 'typedi';
-import { ITestResult } from '../../models';
-import { ICertificatePayload } from '../../models';
+import { ICertificatePayload, ITestResult } from '../../models';
 import { CERTIFICATE_DATA, TEST_RESULTS, VEHICLE_TYPES } from '../../models/Enums';
 import { BasePayloadCommand } from '../ICertificatePayloadCommand';
 
@@ -69,6 +68,10 @@ export class PassOrFailCertificateCommand extends BasePayloadCommand {
 				? moment(testType.lastSeatbeltInstallationCheckDate).format('DD.MM.YYYY')
 				: '\u00A0',
 			SeatBeltNumber: testType.numberOfSeatbeltsFitted,
+			Recalls: {
+				manufacturer: testResult.recalls?.manufacturer ?? null,
+				hasRecall: testResult.recalls?.hasRecall ?? false,
+			},
 		};
 	}
 }
