@@ -6346,6 +6346,78 @@ describe("cert-gen", () => {
                                 callSearchTechRecordSpy.mockClear();
                             });
                     });
+
+                    it("should return a VTG5 payload without signature but with a recalls object populated", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            DATA: {
+                                TestNumber: "W01A00310",
+                                TestStationPNumber: "09-4129632",
+                                TestStationName: "Abshire-Kub",
+                                CurrentOdometer: {
+                                    value: 12312,
+                                    unit: "kilometres",
+                                },
+                                IssuersName: "CVS Dev1",
+                                DateOfTheTest: "26.02.2019",
+                                CountryOfRegistrationCode: "gb",
+                                VehicleEuClassification: "M1",
+                                RawVIN: "P012301098765",
+                                RawVRM: "VM14MDT",
+                                ExpiryDate: "25.02.2020",
+                                EarliestDateOfTheNextTest: "01.11.2019",
+                                SeatBeltTested: "Yes",
+                                SeatBeltPreviousCheckDate: "26.02.2019",
+                                SeatBeltNumber: 2,
+                                Make: "Isuzu",
+                                Model: "FM",
+                                OdometerHistoryList: [
+                                    {
+                                        value: 400000,
+                                        unit: "kilometres",
+                                        date: "19.01.2019",
+                                    },
+                                    {
+                                        value: 390000,
+                                        unit: "kilometres",
+                                        date: "18.01.2019",
+                                    },
+                                    {
+                                        value: 380000,
+                                        unit: "kilometres",
+                                        date: "17.01.2019",
+                                    },
+                                ],
+                                Recalls: {
+                                    manufacturer: 'manufacturer',
+                                    hasRecall: true
+                                }
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null,
+                            },
+                        };
+
+                        callSearchTechRecordSpy.mockResolvedValue(techRecordsRwtHgvSearch);
+
+                        const techRecordResponseRwtMock = cloneDeep(techRecordsRwtHgv);
+                        callGetTechRecordSpy.mockResolvedValue(techRecordResponseRwtMock as any);
+
+                        testResult.recalls = {
+                            manufacturer: 'manufacturer',
+                            hasRecall: true
+                        }
+
+                        return await certificateGenerationService
+                            .generatePayload(testResult)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                                testResult.recalls = null;
+                            });
+                    });
                 });
 
                 context("and lambda-to-lambda calls were unsuccessful", () => {
