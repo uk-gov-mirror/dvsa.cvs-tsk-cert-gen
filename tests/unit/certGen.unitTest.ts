@@ -6404,18 +6404,19 @@ describe("cert-gen", () => {
                         const techRecordResponseRwtMock = cloneDeep(techRecordsRwtHgv);
                         callGetTechRecordSpy.mockResolvedValue(techRecordResponseRwtMock as any);
 
-                        testResult.recalls = {
+                        const duplicatedTestResult = cloneDeep(testResult);
+
+                        duplicatedTestResult.recalls = {
                             manufacturer: 'manufacturer',
                             hasRecall: true
                         }
 
                         return await certificateGenerationService
-                            .generatePayload(testResult)
+                            .generatePayload(duplicatedTestResult)
                             .then((payload: any) => {
                                 expect(payload).toEqual(expectedResult);
                                 callGetTechRecordSpy.mockClear();
                                 callSearchTechRecordSpy.mockClear();
-                                testResult.recalls = null;
                             });
                     });
                 });
