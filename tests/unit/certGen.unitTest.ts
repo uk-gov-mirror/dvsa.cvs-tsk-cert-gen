@@ -37,6 +37,7 @@ import docGenRwt from "../resources/doc-gen-payload-rwt.json";
 import queueEventFailPRS from "../resources/queue-event-fail-prs.json";
 import queueEventFail from "../resources/queue-event-fail.json";
 import queueEventPass from "../resources/queue-event-pass.json";
+import queueEventAbandon from "../resources/queue-event-abandon.json";
 import techRecordsPsv from "../resources/tech-records-response-PSV.json";
 import techRecordsRwtHgvSearch from "../resources/tech-records-response-rwt-hgv-search.json";
 import techRecordsRwtHgv from "../resources/tech-records-response-rwt-hgv.json";
@@ -84,6 +85,9 @@ describe("cert-gen", () => {
                 translatePrsTestResult: false,
                 translateFailTestResult: false,
             },
+            abandonedCerts: {
+                enabled: false,
+            }
         };
 
         mockGetProfile.mockReturnValue(Promise.resolve(featureFlags));
@@ -4479,7 +4483,6 @@ describe("cert-gen", () => {
             })
         });
 
-
         context("when a prs test result is read from the queue", () => {
             const event: any = JSON.parse(
                 fs.readFileSync(
@@ -6278,6 +6281,374 @@ describe("cert-gen", () => {
                         });
                     }
                 );
+            });
+        });
+
+        context("when an abandoned test result is read from the queue", () => {
+            const event: any = { ...queueEventAbandon };
+            const testResult: any = JSON.parse(event.Records[0].body);
+
+            context("and a payload is generated", () => {
+                context("and no signatures were found in the bucket", () => {
+                    it("should return a VTG12 payload without signature", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: "some additional",
+                                DateOfTheTest: "06.08.2024",
+                                IssuersName: "AN Other",
+                                ReasonsForRefusal: [
+                                    "A Ministry Plate has been issued and is not fitted to the vehicle or trailer",
+                                    "Current Health and Safety legislation cannot be met in testing the vehicle",
+                                    "No proof was given that the vehicle used for carrying dangerous/toxic/corrosive or inflammable goods had been cleaned or otherwise rendered safe for test",
+                                    "The driver and/or presenter of the vehicle refused to or was unable to comply with the instructions of DVSA staff making it impractical or unsafe to continue the test",
+                                    "The examiner could not open the tachograph",
+                                    "The particulars of the motor vehicle or trailer (e.g. number of axles / axle weights) do not match the VTG6 Ministry Plate fitted to the vehicle."
+                                ],
+                                RegistrationNumber: "CT70VRL",
+                                TestStationName: "Abshire-Kub",
+                                TestStationPNumber: "09-4129632",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null
+                            },
+                        };
+
+                        return await certificateGenerationService
+                            .generatePayload(testResult)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                            });
+                    });
+                });
+
+                context("and signatures were found in the bucket", () => {
+                    it("should return a VTG12 payload with signature", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: "some additional",
+                                DateOfTheTest: "06.08.2024",
+                                IssuersName: "AN Other",
+                                ReasonsForRefusal: [
+                                    "A Ministry Plate has been issued and is not fitted to the vehicle or trailer",
+                                    "Current Health and Safety legislation cannot be met in testing the vehicle",
+                                    "No proof was given that the vehicle used for carrying dangerous/toxic/corrosive or inflammable goods had been cleaned or otherwise rendered safe for test",
+                                    "The driver and/or presenter of the vehicle refused to or was unable to comply with the instructions of DVSA staff making it impractical or unsafe to continue the test",
+                                    "The examiner could not open the tachograph",
+                                    "The particulars of the motor vehicle or trailer (e.g. number of axles / axle weights) do not match the VTG6 Ministry Plate fitted to the vehicle."
+                                ],
+                                RegistrationNumber: "CT70VRL",
+                                TestStationName: "Abshire-Kub",
+                                TestStationPNumber: "09-4129632",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: fs
+                                    .readFileSync(
+                                        path.resolve(__dirname, `../resources/signatures/1.base64`)
+                                    )
+                                    .toString(),
+                            },
+                        };
+
+                        // Add a new signature
+                        S3BucketMockService.buckets.push({
+                            bucketName: `cvs-signature-${process.env.BUCKET}`,
+                            files: ["1.base64"],
+                        });
+                        return await certificateGenerationService
+                            .generatePayload(testResult)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                                // Remove the signature
+                                S3BucketMockService.buckets.pop();
+                            });
+                    });
+                });
+            });
+        });
+
+        context("when an abandoned test result is read from the queue", () => {
+            const event: any = { ...queueEventAbandon };
+            const hgvAnnualTest: any = JSON.parse(event.Records[0].body);
+            const hgvAdrTest: any = JSON.parse(event.Records[1].body);
+            const hgvRWTest: any = JSON.parse(event.Records[2].body);
+            const trlAnnualTest: any = JSON.parse(event.Records[3].body);
+            const hgvTIRTest: any = JSON.parse(event.Records[4].body);
+            const psvAnnualTest: any = JSON.parse(event.Records[5].body);
+            const psvFirstTest: any = JSON.parse(event.Records[6].body);
+            const psvDDATest: any = JSON.parse(event.Records[7].body);
+            const psvCOIFTest: any = JSON.parse(event.Records[8].body);
+
+            context("and a payload is generated", () => {
+                context("and the test is for a hgv or trailer", () => {
+                    it("should return a VTG12 payload for an hgv annual test", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: "some additional",
+                                DateOfTheTest: "06.08.2024",
+                                IssuersName: "AN Other",
+                                ReasonsForRefusal: [
+                                    "A Ministry Plate has been issued and is not fitted to the vehicle or trailer",
+                                    "Current Health and Safety legislation cannot be met in testing the vehicle",
+                                    "No proof was given that the vehicle used for carrying dangerous/toxic/corrosive or inflammable goods had been cleaned or otherwise rendered safe for test",
+                                    "The driver and/or presenter of the vehicle refused to or was unable to comply with the instructions of DVSA staff making it impractical or unsafe to continue the test",
+                                    "The examiner could not open the tachograph",
+                                    "The particulars of the motor vehicle or trailer (e.g. number of axles / axle weights) do not match the VTG6 Ministry Plate fitted to the vehicle."
+                                ],
+                                RegistrationNumber: "CT70VRL",
+                                TestStationName: "Abshire-Kub",
+                                TestStationPNumber: "09-4129632",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null
+                            },
+                        };
+
+                        return await certificateGenerationService
+                            .generatePayload(hgvAnnualTest)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                            });
+                    });
+                    it("should return a VTG12 payload for an hgv ADR test", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: null,
+                                DateOfTheTest: "09.12.2024",
+                                IssuersName: "AN Other",
+                                ReasonsForRefusal: [
+                                    "The examiner could not open the tachograph"
+                                ],
+                                RegistrationNumber: "QA07HGV",
+                                TestStationName: "Abshire-Kub",
+                                TestStationPNumber: "09-4129632",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null
+                            },
+                        };
+
+                        return await certificateGenerationService
+                            .generatePayload(hgvAdrTest)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                            });
+                    });
+                    it("should return a VTG12 payload for a hgv Road-worthiness test", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: null,
+                                DateOfTheTest: "09.12.2024",
+                                IssuersName: "AN Other",
+                                ReasonsForRefusal: [
+                                    "There is not permanently fixed to the chassis serial number as shown on the registration document (motor vehicle) or the identification mark issued by the Secretary of State (trailer)"
+                                ],
+                                RegistrationNumber: "QA06HGV",
+                                TestStationName: "Abshire-Kub",
+                                TestStationPNumber: "09-4129632",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null
+                            },
+                        };
+
+                        return await certificateGenerationService
+                            .generatePayload(hgvRWTest)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                            });
+                    });
+                    it("should return a VTG12 payload for a trl annual test", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: null,
+                                DateOfTheTest: "06.04.2023",
+                                IssuersName: "CVS FullAccess",
+                                ReasonsForRefusal: [
+                                    "The vehicle was not submitted for test at the appointed time."
+                                ],
+                                RegistrationNumber: "C456789",
+                                TestStationName: "Larson, Nader and Okuneva",
+                                TestStationPNumber: "84-926821",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null
+                            },
+                        };
+
+                        return await certificateGenerationService
+                            .generatePayload(trlAnnualTest)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                            });
+                    });
+                    it("should return a VTG12 payload for a hgv TIR test", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: null,
+                                DateOfTheTest: "09.12.2024",
+                                IssuersName: "AN Other",
+                                ReasonsForRefusal: [
+                                    "The relevant test fee has not been paid"
+                                ],
+                                RegistrationNumber: "QA08HGV",
+                                TestStationName: "Abshire-Kub",
+                                TestStationPNumber: "09-4129632",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null
+                            },
+                        };
+
+                        return await certificateGenerationService
+                            .generatePayload(hgvTIRTest)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                            });
+                    });
+                });
+
+                context("and the test is for a psv", () => {
+                    it("should return a VTP12 payload for a psv annual test", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: null,
+                                DateOfTheTest: "03.04.2023",
+                                IssuersName: "TST CVS PSVTester Dev 10",
+                                ReasonsForRefusal: [
+                                    "The vehicle was not submitted for test at the appointed time."
+                                ],
+                                RegistrationNumber: "AA56BCD",
+                                TestStationName: "Larson, Nader and Okuneva",
+                                TestStationPNumber: "84-926821",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null
+                            },
+                        };
+
+                        return await certificateGenerationService
+                            .generatePayload(psvAnnualTest)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                            });
+                    });
+                    it("should return a VTP12 payload for a psv first test", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: null,
+                                DateOfTheTest: "09.12.2024",
+                                IssuersName: "AN Other",
+                                ReasonsForRefusal: [
+                                    "The vehicle exhaust outlet has been modified in such a way as to prevent a metered smoke check being conducted"
+                                ],
+                                RegistrationNumber: "QA09PSV",
+                                TestStationName: "Abshire-Kub",
+                                TestStationPNumber: "09-4129632",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null
+                            },
+                        };
+
+                        return await certificateGenerationService
+                            .generatePayload(psvFirstTest)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                            });
+                    });
+                    it("should return a VTP12 payload for a psv first test", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: null,
+                                DateOfTheTest: "11.12.2024",
+                                IssuersName: "Joseph Richards",
+                                ReasonsForRefusal: [
+                                    "The driver at the time of the examination did not remain with the vehicle and operate the controls, or did not comply with a reasonable request of the examiner in the course of his duties, or did not remove and refit panels as requested"
+                                ],
+                                RegistrationNumber: "QA07PSV",
+                                TestStationName: "Abshire-Kub",
+                                TestStationPNumber: "09-4129632",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null
+                            },
+                        };
+
+                        return await certificateGenerationService
+                            .generatePayload(psvDDATest)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                            });
+                    });
+                    it("should return a VTP12 payload for a psv COIF test", async () => {
+                        const expectedResult: any = {
+                            Watermark: "NOT VALID",
+                            ABANDONED_DATA: {
+                                AdditionalComments: null,
+                                DateOfTheTest: "11.12.2024",
+                                IssuersName: "AN Other",
+                                ReasonsForRefusal: [
+                                    "The vehicle/trailer was presented at an incorrect test location (see conditions specified on IVA 30)"
+                                ],
+                                RegistrationNumber: "QA06PSV",
+                                TestStationName: "Abshire-Kub",
+                                TestStationPNumber: "09-4129632",
+                            },
+                            Signature: {
+                                ImageType: "png",
+                                ImageData: null
+                            },
+                        };
+
+                        return await certificateGenerationService
+                            .generatePayload(psvCOIFTest)
+                            .then((payload: any) => {
+                                expect(payload).toEqual(expectedResult);
+                                callGetTechRecordSpy.mockClear();
+                                callSearchTechRecordSpy.mockClear();
+                            });
+                    });
+                });
             });
         });
     });
@@ -8935,7 +9306,7 @@ describe("cert-gen", () => {
                     it("should thrown an error", async () => {
                         expect.assertions(1);
                         jest.spyOn(CertificateRequestProcessor.prototype, 'preProcessPayload').mockImplementation(
-                            () => { 
+                            () => {
                                 return event[0]
                             }
                         )

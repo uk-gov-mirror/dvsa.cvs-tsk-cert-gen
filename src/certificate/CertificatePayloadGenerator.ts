@@ -4,6 +4,7 @@ import { ICertificatePayload, TestResultSchemaTestTypesAsObject } from '../model
 import { CERTIFICATE_DATA } from '../models/Enums';
 import { CertificatePayloadStateBag } from './CertificatePayloadStateBag';
 import { ICertificatePayloadCommand } from './ICertificatePayloadCommand';
+import { AbandonedCertificateCommand } from './commands/AbandonedCertificateCommand';
 import { AdrCertificateCommand } from './commands/AdrCertificateCommand';
 import { DefectsCommand } from './commands/DefectsCommand';
 import { IvaCertificateCommand } from './commands/IvaCertificateCommand';
@@ -30,6 +31,7 @@ export class CertificatePayloadGenerator implements ICertificatePayloadCommand {
 		this.defectsCommand,
 		this.makeAndModelCommand,
 		this.odometerHistoryCommand,
+		this.abandonedCertificateCommand,
 	];
 
 	/**
@@ -47,7 +49,8 @@ export class CertificatePayloadGenerator implements ICertificatePayloadCommand {
 		@Inject() private testHistoryCommand: TestHistoryCommand,
 		@Inject() private defectsCommand: DefectsCommand,
 		@Inject() private makeAndModelCommand: MakeAndModelCommand,
-		@Inject() private odometerHistoryCommand: OdometerHistoryCommand
+		@Inject() private odometerHistoryCommand: OdometerHistoryCommand,
+		@Inject() private abandonedCertificateCommand: AbandonedCertificateCommand
 	) {}
 
 	/**

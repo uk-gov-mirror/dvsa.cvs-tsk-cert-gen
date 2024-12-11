@@ -45,7 +45,10 @@ class TestConvertorService {
 
 			const { testTypeClassification, testResult, requiredStandards } = record.testTypes;
 
-			// Filter by testResult (abandoned tests are not allowed)
+			if (testResult === TestResults.ABANDONED) {
+				return true;
+			}
+
 			if (![TestResults.PASS, TestResults.FAIL, TestResults.PRS].includes(testResult)) {
 				return false;
 			}

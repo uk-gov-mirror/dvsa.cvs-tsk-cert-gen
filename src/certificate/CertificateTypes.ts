@@ -32,6 +32,9 @@ export class CertificateTypes {
 			adr_pass: config.documentNames.adr_pass,
 			iva_fail: config.documentNames.iva_fail,
 			msva_fail: config.documentNames.msva_fail,
+			hgv_abandoned: config.documentNames.hgv_abandoned,
+			trl_abandoned: config.documentNames.trl_abandoned,
+			psv_abandoned: config.documentNames.psv_abandoned,
 		};
 
 		const keyTyped = type as keyof typeof certTypes;
