@@ -15,8 +15,9 @@ import { MsvaCertificateCommand } from "../../src/certificate/commands/MsvaCerti
 import { PassOrFailCertificateCommand } from "../../src/certificate/commands/PassOrFailCertificateCommand";
 import { DefectRepository } from "../../src/defect/DefectRepository";
 import { DefectService } from "../../src/defect/DefectService";
+import { CertificateRequestProcessor } from "../../src/functions/CertificateRequestProcessor";
 import { certGen } from "../../src/functions/certGen";
-import { ICertificatePayload, IFeatureFlags, ITestResult } from "../../src/models";
+import { ICertificatePayload, IFeatureFlags, TestResultSchemaTestTypesAsObject } from "../../src/models";
 import { CERTIFICATE_DATA } from "../../src/models/Enums";
 import {
     CertificateGenerationService,
@@ -5696,7 +5697,8 @@ describe("cert-gen", () => {
                                     additionalDefects: [
                                         {
                                             defectName: "N/A",
-                                            defectNotes: ""
+                                            defectNotes: "",
+                                            referenceNumber: ""
                                         }
                                     ],
                                     bodyType: "some bodyType",
@@ -5747,7 +5749,8 @@ describe("cert-gen", () => {
                                     additionalDefects: [
                                         {
                                             defectName: "N/A",
-                                            defectNotes: ""
+                                            defectNotes: "",
+                                            referenceNumber: ""
                                         }
                                     ],
                                     bodyType: null,
@@ -5819,6 +5822,7 @@ describe("cert-gen", () => {
                                         {
                                             defectName: "N/A",
                                             defectNotes: "",
+                                            referenceNumber: ""
                                         }
                                     ],
                                     bodyType: "some bodyType",
@@ -5944,6 +5948,7 @@ describe("cert-gen", () => {
                                         {
                                             defectName: "N/A",
                                             defectNotes: "",
+                                            referenceNumber: ""
                                         }
                                     ],
                                     bodyType: "some bodyType",
@@ -6000,6 +6005,7 @@ describe("cert-gen", () => {
                                         {
                                             defectName: "N/A",
                                             defectNotes: "",
+                                            referenceNumber: ""
                                         }
                                     ],
                                     bodyType: "some bodyType",
@@ -6067,6 +6073,7 @@ describe("cert-gen", () => {
                                         {
                                             defectName: "N/A",
                                             defectNotes: "",
+                                            referenceNumber: ""
                                         }
                                     ],
                                     requiredStandards: [
@@ -6119,6 +6126,7 @@ describe("cert-gen", () => {
                                         {
                                             defectName: "N/A",
                                             defectNotes: "",
+                                            referenceNumber: ""
                                         }
                                     ],
                                     requiredStandards: [
@@ -6176,6 +6184,7 @@ describe("cert-gen", () => {
                                         {
                                             defectName: "N/A",
                                             defectNotes: "",
+                                            referenceNumber: ""
                                         }
                                     ],
                                     requiredStandards: [
@@ -6238,7 +6247,7 @@ describe("cert-gen", () => {
                                     additionalDefects: [
                                         {
                                             defectName: "Rust",
-                                            defectNotes: "slight rust around the wheel arch",
+                                            defectNotes: "slight rust around the wheel arch"
                                         }
                                     ],
                                     requiredStandards: [
@@ -8222,7 +8231,7 @@ describe("cert-gen", () => {
             "when a passing test result for Roadworthiness test for HGV or TRL is read from the queue",
             () => {
                 const event: any = cloneDeep(queueEventPass);
-                const testResult: ITestResult = JSON.parse(event.Records[1].body);
+                const testResult: TestResultSchemaTestTypesAsObject = JSON.parse(event.Records[1].body);
                 testResult.testTypes.testTypeId = "122";
                 testResult.vin = "GYFC26269R240355";
                 testResult.vrm = "NKPILNCN";
@@ -8283,7 +8292,7 @@ describe("cert-gen", () => {
             () => {
                 it("should pass certificateType as RWT", async () => {
                     const event: any = cloneDeep(queueEventPass);
-                    const testResult: ITestResult = JSON.parse(event.Records[1].body);
+                    const testResult: TestResultSchemaTestTypesAsObject = JSON.parse(event.Records[1].body);
                     testResult.testTypes.testTypeId = "122";
                     testResult.vin = "GYFC26269R240355";
                     testResult.vrm = "NKPILNCN";
@@ -8309,7 +8318,7 @@ describe("cert-gen", () => {
             "when a failing test result for Roadworthiness test for HGV or TRL is read from the queue",
             () => {
                 const event: any = cloneDeep(queueEventFail);
-                const testResult: ITestResult = JSON.parse(event.Records[2].body);
+                const testResult: TestResultSchemaTestTypesAsObject = JSON.parse(event.Records[2].body);
                 testResult.testTypes.testTypeId = "91";
                 testResult.vin = "T12768594";
                 testResult.trailerId = "0285678";
@@ -8365,13 +8374,13 @@ describe("cert-gen", () => {
     context("CertGenService for IVA 30 test", () => {
         context("when a failing test result for basic IVA test is read from the queue", () => {
             const event: any = cloneDeep(queueEventFail);
-            const testResult: ITestResult = JSON.parse(event.Records[3].body);
+            const testResult: TestResultSchemaTestTypesAsObject = JSON.parse(event.Records[3].body);
 
             describe("reapplication date handling", () => {
                     testResult.testTypes.reapplicationDate = "2024-05-27T00:00:00.000Z";
                     context("and reapplication date is provided", () => {
                         const event: any = cloneDeep(queueEventFail);
-                        const testResultReapplication: ITestResult = JSON.parse(event.Records[21].body);
+                        const testResultReapplication: TestResultSchemaTestTypesAsObject = JSON.parse(event.Records[21].body);
 
                         it("should include reapplication date when provided", async () => {
                             testResult.testTypes.reapplicationDate = "2024-05-27T00:00:00.000Z";
@@ -8380,7 +8389,8 @@ describe("cert-gen", () => {
                                     "additionalDefects": [
                                         {
                                             "defectName": "N/A",
-                                            "defectNotes": ""
+                                            "defectNotes": "",
+                                            "referenceNumber": ""
                                         }
                                     ],
                                     "bodyType": "some bodyType",
@@ -8448,7 +8458,7 @@ describe("cert-gen", () => {
                     });
                     context("and reapplication date is NOT provided", () => {
                         const event: any = cloneDeep(queueEventFail);
-                        const testResultReapplication: ITestResult = JSON.parse(event.Records[21].body);
+                        const testResultReapplication: TestResultSchemaTestTypesAsObject = JSON.parse(event.Records[21].body);
 
                         it("should return the IVA_30 payload with the reapplication date in the payload", async () => {
                             testResultReapplication.testTypes.reapplicationDate = "";
@@ -8457,7 +8467,8 @@ describe("cert-gen", () => {
                                     "additionalDefects": [
                                         {
                                             "defectName": "N/A",
-                                            "defectNotes": ""
+                                            "defectNotes": "",
+                                            "referenceNumber": ""
                                         }
                                     ],
                                     "bodyType": "some bodyType",
@@ -8610,12 +8621,12 @@ describe("cert-gen", () => {
                 "when a failing test result MSVA test is read from the queue",
                 () => {
                     const event: any = cloneDeep(queueEventFail);
-                    const testResult: ITestResult = JSON.parse(event.Records[8].body); // retrieve record
+                    const testResult: TestResultSchemaTestTypesAsObject = JSON.parse(event.Records[8].body); // retrieve record
 
                     context("and a payload is generated", () => {
                         context("and reapplication date is provided", () => {
                             const event: any = cloneDeep(queueEventFail);
-                            const testResultReapplication: ITestResult = JSON.parse(event.Records[21].body);
+                            const testResultReapplication: TestResultSchemaTestTypesAsObject = JSON.parse(event.Records[21].body);
 
                             it("should return the IVA_30 payload with the reapplication date in the payload", async () => {
                                 testResult.testTypes.reapplicationDate = "2024-05-27T00:00:00.000Z";
@@ -8624,7 +8635,8 @@ describe("cert-gen", () => {
                                         "additionalDefects": [
                                             {
                                                 "defectName": "N/A",
-                                                "defectNotes": ""
+                                                "defectNotes": "",
+                                                "referenceNumber": ""
                                             }
                                         ],
                                         "bodyType": "some bodyType",
@@ -8692,7 +8704,7 @@ describe("cert-gen", () => {
                         });
                         context("and reapplication date is NOT provided", () => {
                             const event: any = cloneDeep(queueEventFail);
-                            const testResultReapplication: ITestResult = JSON.parse(event.Records[21].body);
+                            const testResultReapplication: TestResultSchemaTestTypesAsObject = JSON.parse(event.Records[21].body);
 
                             it("should return the IVA_30 payload with the reapplication date in the payload", async () => {
                                 testResultReapplication.testTypes.reapplicationDate = "";
@@ -8701,7 +8713,8 @@ describe("cert-gen", () => {
                                         "additionalDefects": [
                                             {
                                                 "defectName": "N/A",
-                                                "defectNotes": ""
+                                                "defectNotes": "",
+                                                "referenceNumber": ""
                                             }
                                         ],
                                         "bodyType": "some bodyType",
@@ -8921,7 +8934,11 @@ describe("cert-gen", () => {
                 context("and the testResultId is malformed", () => {
                     it("should thrown an error", async () => {
                         expect.assertions(1);
-
+                        jest.spyOn(CertificateRequestProcessor.prototype, 'preProcessPayload').mockImplementation(
+                            () => { 
+                                return event[0]
+                            }
+                        )
                         const result = await certGen(event, undefined as any, () => {
                             return;
                         });

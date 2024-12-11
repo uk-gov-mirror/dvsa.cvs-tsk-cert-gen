@@ -18,6 +18,7 @@ export class AdrCertificateCommand extends BasePayloadCommand {
 		}
 
 		const { testResult } = this.state;
+		const testTypes = testResult.testTypes;
 
 		const [adrDetails, makeAndModel] = await Promise.all([
 			this.techRecordService.getAdrDetails(testResult),
@@ -50,10 +51,10 @@ export class AdrCertificateCommand extends BasePayloadCommand {
 			TankCode: adrDetails?.techRecord_adrDetails_tank_tankDetails_tankCode,
 			SpecialProvisions: adrDetails?.techRecord_adrDetails_tank_tankDetails_specialProvisions,
 			TankStatement: adrDetails?.techRecord_adrDetails_tank_tankDetails_tankStatement_statement,
-			ExpiryDate: testResult.testTypes.testExpiryDate,
+			ExpiryDate: testTypes.testExpiryDate,
 			AtfNameAtfPNumber: testResult.testStationName + ' ' + testResult.testStationPNumber,
-			Notes: testResult.testTypes.additionalNotesRecorded,
-			TestTypeDate: testResult.testTypes.testTypeStartTimestamp,
+			Notes: testTypes.additionalNotesRecorded,
+			TestTypeDate: testTypes.testTypeStartTimestamp,
 		};
 
 		return {

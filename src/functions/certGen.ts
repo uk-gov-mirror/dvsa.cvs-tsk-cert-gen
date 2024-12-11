@@ -14,7 +14,10 @@ const certGen: Handler = async (event: SQSEvent, context?: Context, callback?: C
 
 	for (const record of event.Records) {
 		try {
-			await processRequest.process(JSON.parse(record.body));
+			const individualTestTypes = await processRequest.preProcessPayload(record);
+			for (const test of individualTestTypes) {
+				await processRequest.process(test);
+			}
 		} catch (error) {
 			console.error(error);
 			batchItemFailures.push({ itemIdentifier: record.messageId });

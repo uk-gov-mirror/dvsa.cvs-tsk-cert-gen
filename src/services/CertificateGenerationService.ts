@@ -1,12 +1,19 @@
 import { InvocationRequest, InvocationResponse, ServiceException } from '@aws-sdk/client-lambda';
 import { getProfile } from '@dvsa/cvs-feature-flags/profiles/vtx';
+import { TestResults } from '@dvsa/cvs-type-definitions/types/v1/enums/testResult.enum.js';
 import { toUint8Array } from '@smithy/util-utf8';
 import moment from 'moment';
 import { Inject, Service } from 'typedi';
 import { CertificatePayloadGenerator } from '../certificate/CertificatePayloadGenerator';
 import { CertificateTypes } from '../certificate/CertificateTypes';
-import type { IFeatureFlags, IGeneratedCertificateResponse, IInvokeConfig, IMOTConfig, ITestResult } from '../models';
-import { CERTIFICATE_DATA, TEST_RESULTS, VEHICLE_TYPES } from '../models/Enums';
+import {
+	IFeatureFlags,
+	IGeneratedCertificateResponse,
+	IInvokeConfig,
+	IMOTConfig,
+	TestResultSchemaTestTypesAsObject,
+} from '../models';
+import { CERTIFICATE_DATA, VEHICLE_TYPES } from '../models/Enums';
 import { TestResultService } from '../test-result/TestResultService';
 import { TestStationRepository } from '../test-station/TestStationRepository';
 import { Configuration } from '../utils/Configuration';
@@ -151,13 +158,13 @@ class CertificateGenerationService {
 	public isTestResultFlagEnabled(testResult: string, featureFlags: IFeatureFlags): boolean {
 		let shouldTranslate = false;
 		switch (testResult) {
-			case TEST_RESULTS.PRS:
+			case TestResults.PRS:
 				shouldTranslate = featureFlags.welshTranslation.translatePrsTestResult ?? false;
 				break;
-			case TEST_RESULTS.PASS:
+			case TestResults.PASS:
 				shouldTranslate = featureFlags.welshTranslation.translatePassTestResult ?? false;
 				break;
-			case TEST_RESULTS.FAIL:
+			case TestResults.FAIL:
 				shouldTranslate = featureFlags.welshTranslation.translateFailTestResult ?? false;
 				break;
 			default:
@@ -188,33 +195,25 @@ class CertificateGenerationService {
 		return isWelshCountry;
 	}
 
-	private getTestType(testResult: ITestResult): CERTIFICATE_DATA {
+	private getTestType(testResult: TestResultSchemaTestTypesAsObject): CERTIFICATE_DATA {
+		const testType = testResult.testTypes;
 		if (this.testResultService.isHgvTrlRoadworthinessCertificate(testResult)) {
 			return CERTIFICATE_DATA.RWT_DATA;
 		}
 
-		if (
-			testResult.testTypes.testResult === TEST_RESULTS.PASS &&
-			this.testResultService.isTestTypeAdr(testResult.testTypes)
-		) {
+		if (testType.testResult === TestResults.PASS && this.testResultService.isTestTypeAdr(testResult.testTypes)) {
 			return CERTIFICATE_DATA.ADR_DATA;
 		}
 
-		if (
-			testResult.testTypes.testResult === TEST_RESULTS.FAIL &&
-			this.testResultService.isIvaTest(testResult.testTypes.testTypeId)
-		) {
+		if (testType.testResult === TestResults.FAIL && this.testResultService.isIvaTest(testType.testTypeId)) {
 			return CERTIFICATE_DATA.IVA_DATA;
 		}
 
-		if (
-			testResult.testTypes.testResult === TEST_RESULTS.FAIL &&
-			this.testResultService.isMsvaTest(testResult.testTypes.testTypeId)
-		) {
+		if (testType.testResult === TestResults.FAIL && this.testResultService.isMsvaTest(testType.testTypeId)) {
 			return CERTIFICATE_DATA.MSVA_DATA;
 		}
 
-		if (testResult.testTypes.testResult !== TEST_RESULTS.PASS) {
+		if (testType.testResult !== TestResults.PASS) {
 			return CERTIFICATE_DATA.FAIL_DATA;
 		}
 

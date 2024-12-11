@@ -1,7 +1,6 @@
 import merge from 'lodash.merge';
 import { Inject, Service } from 'typedi';
-import { ITestResult } from '../models';
-import { ICertificatePayload } from '../models';
+import { ICertificatePayload, TestResultSchemaTestTypesAsObject } from '../models';
 import { CERTIFICATE_DATA } from '../models/Enums';
 import { CertificatePayloadStateBag } from './CertificatePayloadStateBag';
 import { ICertificatePayloadCommand } from './ICertificatePayloadCommand';
@@ -58,7 +57,7 @@ export class CertificatePayloadGenerator implements ICertificatePayloadCommand {
 	 * @param isWelsh - the boolean value whether the atf where test was conducted resides in Wales
 	 */
 	public async generateCertificateData(
-		testResult: ITestResult,
+		testResult: TestResultSchemaTestTypesAsObject,
 		type: CERTIFICATE_DATA,
 		isWelsh = false
 	): Promise<ICertificatePayload> {
