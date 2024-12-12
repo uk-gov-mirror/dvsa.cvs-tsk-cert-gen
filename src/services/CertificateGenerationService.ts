@@ -137,14 +137,16 @@ class CertificateGenerationService {
 		if (CertificateGenerationService.flags) {
 			console.log('Feature flag cache already set');
 			return;
-		} else {
-			try {
-				console.log('Feature flag cache not set, retrieving feature flags');
-				CertificateGenerationService.flags = await getProfile();
-			} catch (e) {
-				console.error(`Failed to retrieve feature flags - ${e}`);
-			}
 		}
+
+		console.log('Feature flag cache not set, retrieving feature flags');
+
+		try {
+			CertificateGenerationService.flags = await getProfile();
+		} catch (e) {
+			console.error(`Failed to retrieve feature flags - ${e}`);
+		}
+
 		console.log('Using feature flags ', CertificateGenerationService.flags);
 	}
 
