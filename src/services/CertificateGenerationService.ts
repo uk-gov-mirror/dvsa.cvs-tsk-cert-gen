@@ -151,7 +151,6 @@ class CertificateGenerationService {
 	/**
 	 * Determine if Welsh translation is required for the given test result
 	 * @param testResult
-	 * @param featureFlags
 	 * @returns Promise<boolean>
 	 */
 	public async shouldTranslateTestResult(testResult: any): Promise<boolean> {
