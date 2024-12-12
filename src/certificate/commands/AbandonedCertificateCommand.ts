@@ -16,7 +16,7 @@ export class AbandonedCertificateCommand extends BasePayloadCommand {
 
 		const { testResult } = this.state;
 
-		const payload = await this.getPayloadData(testResult);
+		const payload = this.getPayloadData(testResult);
 
 		result.ABANDONED_DATA = {
 			...payload,
@@ -25,7 +25,7 @@ export class AbandonedCertificateCommand extends BasePayloadCommand {
 		return result as ICertificatePayload;
 	}
 
-	private async getPayloadData(testResult: TestResultSchemaTestTypesAsObject): Promise<any> {
+	private getPayloadData(testResult: TestResultSchemaTestTypesAsObject): any {
 		const testType = testResult.testTypes;
 		return {
 			RegistrationNumber: this.determineIdentifier(testResult),
