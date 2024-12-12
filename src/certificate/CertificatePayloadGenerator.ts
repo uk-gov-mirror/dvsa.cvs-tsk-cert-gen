@@ -25,13 +25,13 @@ export class CertificatePayloadGenerator implements ICertificatePayloadCommand {
 		this.adrGenerator,
 		this.ivaGenerator,
 		this.msvaGenerator,
+		this.abandonedGenerator,
 		this.signatureCommand,
 		this.watermarkCommand,
 		this.testHistoryCommand,
 		this.defectsCommand,
 		this.makeAndModelCommand,
 		this.odometerHistoryCommand,
-		this.abandonedCertificateCommand,
 	];
 
 	/**
@@ -44,13 +44,13 @@ export class CertificatePayloadGenerator implements ICertificatePayloadCommand {
 		@Inject() private adrGenerator: AdrCertificateCommand,
 		@Inject() private ivaGenerator: IvaCertificateCommand,
 		@Inject() private msvaGenerator: MsvaCertificateCommand,
+		@Inject() private abandonedGenerator: AbandonedCertificateCommand,
 		@Inject() private signatureCommand: SignatureCommand,
 		@Inject() private watermarkCommand: WatermarkCommand,
 		@Inject() private testHistoryCommand: TestHistoryCommand,
 		@Inject() private defectsCommand: DefectsCommand,
 		@Inject() private makeAndModelCommand: MakeAndModelCommand,
-		@Inject() private odometerHistoryCommand: OdometerHistoryCommand,
-		@Inject() private abandonedCertificateCommand: AbandonedCertificateCommand
+		@Inject() private odometerHistoryCommand: OdometerHistoryCommand
 	) {}
 
 	/**
