@@ -52,6 +52,9 @@ interface IMOTConfig {
 		rwt: 'RWT.pdf;';
 		iva_fail: 'IVA30.pdf';
 		msva_fail: 'MSVA30.pdf';
+		hgv_abandoned: 'VTG12.pdf';
+		trl_abandoned: 'VTG12.pdf';
+		psv_abandoned: 'VTP12.pdf';
 	};
 	api_key: string;
 }
@@ -91,6 +94,7 @@ interface ICertificatePayload {
 	ADR_DATA?: any;
 	IVA_DATA?: any;
 	MSVA_DATA?: any;
+	ABANDONED_DATA?: any;
 	Signature: ISignature;
 	Reissue?: IReissue;
 }
@@ -145,6 +149,9 @@ interface IFeatureFlags {
 		translatePassTestResult: boolean;
 		translateFailTestResult: boolean;
 		translatePrsTestResult: boolean;
+	};
+	abandonedCerts: {
+		enabled: boolean;
 	};
 }
 

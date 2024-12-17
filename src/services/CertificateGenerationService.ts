@@ -25,6 +25,7 @@ import { LambdaService } from './LambdaService';
 @Service()
 class CertificateGenerationService {
 	private readonly config: Configuration = Configuration.getInstance();
+	private static flags: IFeatureFlags;
 
 	constructor(
 		@Inject() private lambdaClient: LambdaService,
@@ -42,13 +43,29 @@ class CertificateGenerationService {
 		const config: IMOTConfig = this.config.getMOTConfig();
 		const iConfig: IInvokeConfig = this.config.getInvokeConfig();
 		const testType: any = testResult.testTypes;
+		let shouldTranslateTestResult = false;
+		let shouldGenerateAbandonCertificate = false;
 
-		const shouldTranslateTestResult = await this.shouldTranslateTestResult(testResult);
+		await this.retrieveAndSetFlags();
+
+		if (CertificateGenerationService.flags) {
+			shouldTranslateTestResult = await this.shouldTranslateTestResult(testResult);
+			shouldGenerateAbandonCertificate = this.shouldGenerateAbandonedCerts();
+		}
+
+		console.log('shouldTranslateTestResult: ', shouldTranslateTestResult);
+		console.log('shouldGenerateAbandonCertificate: ', shouldGenerateAbandonCertificate);
 
 		const payload: string = JSON.stringify(await this.generatePayload(testResult, shouldTranslateTestResult));
 
 		let vehicleTestRes: string;
-		if (this.testResultService.isRoadworthinessTestType(testType.testTypeId)) {
+		if (
+			this.testResultService.isValidForAbandonedCertificate(testType.testTypeId) &&
+			testType.testResult === 'abandoned' &&
+			shouldGenerateAbandonCertificate
+		) {
+			vehicleTestRes = `${testResult.vehicleType}_abandoned`;
+		} else if (this.testResultService.isRoadworthinessTestType(testType.testTypeId)) {
 			// CVSB-7677 is road-worthiness test
 			vehicleTestRes = 'rwt';
 		} else if (this.testResultService.isTestTypeAdr(testResult.testTypes)) {
@@ -99,7 +116,7 @@ class CertificateGenerationService {
 					dateOfIssue: moment(testResult.testTypes.testTypeStartTimestamp).format('D MMMM YYYY'),
 					certificateType: certificateType.split('.')[0],
 					fileFormat: 'pdf',
-					fileName: `${testResult.testTypes.testNumber}_${testResult.vin}.pdf`,
+					fileName: this.determineFileName(testResult),
 					fileSize: responseBuffer.byteLength.toString(),
 					certificate: responseBuffer,
 					certificateOrder: testResult.order,
@@ -114,35 +131,56 @@ class CertificateGenerationService {
 	}
 
 	/**
-	 * Handler method for retrieving feature flags and checking if test station is in Wales
+	 * Retrieve feature flags by using or setting cache
+	 */
+	public async retrieveAndSetFlags() {
+		if (CertificateGenerationService.flags) {
+			console.log('Feature flag cache already set');
+			return;
+		}
+
+		console.log('Feature flag cache not set, retrieving feature flags');
+
+		try {
+			CertificateGenerationService.flags = await getProfile();
+		} catch (e) {
+			console.error(`Failed to retrieve feature flags - ${e}`);
+		}
+
+		console.log('Using feature flags ', CertificateGenerationService.flags);
+	}
+
+	/**
+	 * Determine if Welsh translation is required for the given test result
 	 * @param testResult
 	 * @returns Promise<boolean>
 	 */
 	public async shouldTranslateTestResult(testResult: any): Promise<boolean> {
 		let shouldTranslateTestResult = false;
-		try {
-			const featureFlags: IFeatureFlags = await getProfile();
-			console.log('Using feature flags ', featureFlags);
 
-			if (
-				this.isGlobalWelshFlagEnabled(featureFlags) &&
-				this.isTestResultFlagEnabled(testResult.testTypes.testResult, featureFlags)
-			) {
-				shouldTranslateTestResult = await this.isTestStationWelsh(testResult.testStationPNumber);
-			}
-		} catch (e) {
-			console.error(`Failed to retrieve feature flags - ${e}`);
+		if (this.isGlobalWelshFlagEnabled() && this.isTestResultFlagEnabled(testResult.testTypes.testResult)) {
+			shouldTranslateTestResult = await this.isTestStationWelsh(testResult.testStationPNumber);
 		}
 		return shouldTranslateTestResult;
 	}
 
 	/**
+	 * Determine if abandoned certificates should be generated for the given test result
+	 */
+	public shouldGenerateAbandonedCerts(): boolean {
+		if (!CertificateGenerationService.flags.abandonedCerts.enabled) {
+			console.warn(`Unable to generate abandoned certificates: global abandoned certificates flag disabled.`);
+			return false;
+		}
+		return true;
+	}
+
+	/**
 	 * Method to check if Welsh translation is enabled.
-	 * @param featureFlags IFeatureFlags interface
 	 * @returns boolean
 	 */
-	public isGlobalWelshFlagEnabled(featureFlags: IFeatureFlags): boolean {
-		if (!featureFlags.welshTranslation.enabled) {
+	public isGlobalWelshFlagEnabled(): boolean {
+		if (!CertificateGenerationService.flags.welshTranslation.enabled) {
 			console.warn(`Unable to translate any test results: global Welsh flag disabled.`);
 			return false;
 		}
@@ -151,21 +189,20 @@ class CertificateGenerationService {
 
 	/**
 	 * Method to check if Welsh translation is enabled for the given test type.
-	 * @param featureFlags IFeatureFlags interface
 	 * @param testResult string of result, PASS/PRS/FAIL
 	 * @returns boolean
 	 */
-	public isTestResultFlagEnabled(testResult: string, featureFlags: IFeatureFlags): boolean {
+	public isTestResultFlagEnabled(testResult: string): boolean {
 		let shouldTranslate = false;
 		switch (testResult) {
 			case TestResults.PRS:
-				shouldTranslate = featureFlags.welshTranslation.translatePrsTestResult ?? false;
+				shouldTranslate = CertificateGenerationService.flags.welshTranslation.translatePrsTestResult ?? false;
 				break;
 			case TestResults.PASS:
-				shouldTranslate = featureFlags.welshTranslation.translatePassTestResult ?? false;
+				shouldTranslate = CertificateGenerationService.flags.welshTranslation.translatePassTestResult ?? false;
 				break;
 			case TestResults.FAIL:
-				shouldTranslate = featureFlags.welshTranslation.translateFailTestResult ?? false;
+				shouldTranslate = CertificateGenerationService.flags.welshTranslation.translateFailTestResult ?? false;
 				break;
 			default:
 				console.warn('Translation not available for this test result type.');
@@ -197,6 +234,13 @@ class CertificateGenerationService {
 
 	private getTestType(testResult: TestResultSchemaTestTypesAsObject): CERTIFICATE_DATA {
 		const testType = testResult.testTypes;
+		if (
+			testType.testResult === TestResults.ABANDONED &&
+			this.testResultService.isValidForAbandonedCertificate(testType.testTypeId)
+		) {
+			return CERTIFICATE_DATA.ABANDONED_DATA;
+		}
+
 		if (this.testResultService.isHgvTrlRoadworthinessCertificate(testResult)) {
 			return CERTIFICATE_DATA.RWT_DATA;
 		}
@@ -242,6 +286,21 @@ class CertificateGenerationService {
 		payload = JSON.parse(JSON.stringify(payload));
 
 		return payload;
+	}
+
+	/**
+	 * Determines the file name for the generated certificate
+	 * @param testResult - test result for certificate generation
+	 * @private
+	 */
+	private determineFileName(testResult: any): string {
+		if (testResult.testTypes.testResult === TestResults.ABANDONED) {
+			return testResult.vehicleType === VEHICLE_TYPES.TRL || testResult.vehicleType === VEHICLE_TYPES.HGV
+				? `VTG12_${testResult.testTypes.testNumber}.pdf`
+				: `VTP12_${testResult.testTypes.testNumber}.pdf`;
+		} else {
+			return `${testResult.testTypes.testNumber}_${testResult.vin}.pdf`;
+		}
 	}
 }
 

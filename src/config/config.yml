@@ -79,6 +79,9 @@ mot:
     adr_pass: ADR_PASS.pdf;
     iva_fail: IVA30.pdf;
     msva_fail: MSVA30.pdf;
+    hgv_abandoned: VTG12.pdf;
+    trl_abandoned: VTG12.pdf;
+    psv_abandoned: VTP12.pdf;
   documentDir: CVS
 welsh:
   secret_key:

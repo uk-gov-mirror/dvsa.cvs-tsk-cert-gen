@@ -4,6 +4,7 @@ import { ICertificatePayload, TestResultSchemaTestTypesAsObject } from '../model
 import { CERTIFICATE_DATA } from '../models/Enums';
 import { CertificatePayloadStateBag } from './CertificatePayloadStateBag';
 import { ICertificatePayloadCommand } from './ICertificatePayloadCommand';
+import { AbandonedCertificateCommand } from './commands/AbandonedCertificateCommand';
 import { AdrCertificateCommand } from './commands/AdrCertificateCommand';
 import { DefectsCommand } from './commands/DefectsCommand';
 import { IvaCertificateCommand } from './commands/IvaCertificateCommand';
@@ -24,6 +25,7 @@ export class CertificatePayloadGenerator implements ICertificatePayloadCommand {
 		this.adrGenerator,
 		this.ivaGenerator,
 		this.msvaGenerator,
+		this.abandonedGenerator,
 		this.signatureCommand,
 		this.watermarkCommand,
 		this.testHistoryCommand,
@@ -42,6 +44,7 @@ export class CertificatePayloadGenerator implements ICertificatePayloadCommand {
 		@Inject() private adrGenerator: AdrCertificateCommand,
 		@Inject() private ivaGenerator: IvaCertificateCommand,
 		@Inject() private msvaGenerator: MsvaCertificateCommand,
+		@Inject() private abandonedGenerator: AbandonedCertificateCommand,
 		@Inject() private signatureCommand: SignatureCommand,
 		@Inject() private watermarkCommand: WatermarkCommand,
 		@Inject() private testHistoryCommand: TestHistoryCommand,
