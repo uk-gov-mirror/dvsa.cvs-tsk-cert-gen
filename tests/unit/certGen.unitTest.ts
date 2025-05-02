@@ -6287,6 +6287,7 @@ describe("cert-gen", () => {
         context("when an abandoned test result is read from the queue", () => {
             const event: any = { ...queueEventAbandon };
             const testResult: any = JSON.parse(event.Records[0].body);
+            const Defects = {};
 
             context("and a payload is generated", () => {
                 context("and no signatures were found in the bucket", () => {
@@ -6308,6 +6309,7 @@ describe("cert-gen", () => {
                                 RegistrationNumber: "CT70VRL",
                                 TestStationName: "Abshire-Kub",
                                 TestStationPNumber: "09-4129632",
+                                Defects
                             },
                             Signature: {
                                 ImageType: "png",
@@ -6344,6 +6346,7 @@ describe("cert-gen", () => {
                                 RegistrationNumber: "CT70VRL",
                                 TestStationName: "Abshire-Kub",
                                 TestStationPNumber: "09-4129632",
+                                Defects
                             },
                             Signature: {
                                 ImageType: "png",
@@ -6381,6 +6384,7 @@ describe("cert-gen", () => {
             const psvAnnualTest: any = JSON.parse(event.Records[2].body);
             const psvFirstTest: any = JSON.parse(event.Records[3].body);
             const psvCOIFTest: any = JSON.parse(event.Records[4].body);
+            const Defects = {};
 
             context("and a payload is generated", () => {
                 context("and the test is for a hgv or trailer", () => {
@@ -6402,6 +6406,7 @@ describe("cert-gen", () => {
                                 RegistrationNumber: "CT70VRL",
                                 TestStationName: "Abshire-Kub",
                                 TestStationPNumber: "09-4129632",
+                                Defects
                             },
                             Signature: {
                                 ImageType: "png",
@@ -6430,6 +6435,7 @@ describe("cert-gen", () => {
                                 RegistrationNumber: "C456789",
                                 TestStationName: "Larson, Nader and Okuneva",
                                 TestStationPNumber: "84-926821",
+                                Defects
                             },
                             Signature: {
                                 ImageType: "png",
@@ -6461,6 +6467,7 @@ describe("cert-gen", () => {
                                 RegistrationNumber: "AA56BCD",
                                 TestStationName: "Larson, Nader and Okuneva",
                                 TestStationPNumber: "84-926821",
+                                Defects,
                             },
                             Signature: {
                                 ImageType: "png",
@@ -6489,6 +6496,13 @@ describe("cert-gen", () => {
                                 RegistrationNumber: "QA09PSV",
                                 TestStationName: "Abshire-Kub",
                                 TestStationPNumber: "09-4129632",
+                                Defects: {
+                                  DangerousDefects: ['1.2.a A registration mark: missing..'],
+                                  MajorDefects: ['1.2.a A registration mark: missing..'],
+                                  MinorDefects: ['1.2.a A registration mark: missing..'],
+                                  AdvisoryDefects: ['1.2.a A registration mark: missing..'],
+                                  PRSDefects: ['1.2.a A registration mark: missing..']
+                                }
                             },
                             Signature: {
                                 ImageType: "png",
@@ -6517,6 +6531,7 @@ describe("cert-gen", () => {
                                 RegistrationNumber: "QA06PSV",
                                 TestStationName: "Abshire-Kub",
                                 TestStationPNumber: "09-4129632",
+                                Defects
                             },
                             Signature: {
                                 ImageType: "png",
